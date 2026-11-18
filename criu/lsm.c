@@ -227,9 +227,32 @@ int dump_xattr_security_selinux(int fd, FdinfoEntry *e)
 
 #endif
 
+/*
+ * A container usually has sysfs but not securityfs mounted, so CRIU run inside
+ * one (e.g. via nsenter) finds no AA_SECURITYFS_PATH although AppArmor confines
+ * the container's tasks. The module parameter tells AppArmor is enabled there.
+ */
+static bool apparmor_enabled(void)
+{
+	char c = 0;
+	int fd;
+
+	if (access(AA_SECURITYFS_PATH, F_OK) == 0)
+		return true;
+
+	fd = open(AA_MODULE_ENABLED_PATH, O_RDONLY);
+	if (fd < 0)
+		return false;
+	if (read(fd, &c, 1) != 1)
+		c = 0;
+	close(fd);
+
+	return c == 'Y';
+}
+
 void kerndat_lsm(void)
 {
-	if (access(AA_SECURITYFS_PATH, F_OK) == 0) {
+	if (apparmor_enabled()) {
 		kdat.lsm = LSMTYPE__APPARMOR;
 		kdat.apparmor_ns_dumping_enabled = check_aa_ns_dumping();
 		return;
