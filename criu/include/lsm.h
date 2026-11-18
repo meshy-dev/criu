@@ -6,6 +6,7 @@
 #include "images/fdinfo.pb-c.h"
 
 #define AA_SECURITYFS_PATH "/sys/kernel/security/apparmor"
+#define AA_MODULE_ENABLED_PATH "/sys/module/apparmor/parameters/enabled"
 
 /*
  * Get the Lsmtype for the current host.
